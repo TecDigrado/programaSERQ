@@ -10,16 +10,14 @@ public class SERQ {
     //•	Pertenece a la clase, no a un objeto
     //•	Puede usarse directamente desde main
     //•	Mantiene su valor durante toda la ejecución del programa
-
-
-
+    
     static int califU1 = 0;
     static int califU2 = 0;
     static int califU3 = 0;
     static int califU4 = 0;
     static int califU5 = 0;
 
-    //Son calificaciones (probablemente de Unidad 1 a Unidad 5).
+    //Son calificaciones (De Unidad 1 a Unidad 5).
     //•	Se inicializan en 0
     //•	Se irán actualizando conforme el usuario avance contestando los cuestionarios
     //•	Pueden usarse para:
