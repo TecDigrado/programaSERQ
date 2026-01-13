@@ -1,15 +1,29 @@
 import java.util.Scanner;
 import java.util.HashMap;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+
 
 public class SERQ {
+
+    // 1. ¿Qué significa static aquí?
+    //Cuando una variable es static:
+    //•	Pertenece a la clase, no a un objeto
+    //•	Puede usarse directamente desde main
+    //•	Mantiene su valor durante toda la ejecución del programa
+
+
 
     static int califU1 = 0;
     static int califU2 = 0;
     static int califU3 = 0;
     static int califU4 = 0;
     static int califU5 = 0;
+
+    //Son calificaciones (probablemente de Unidad 1 a Unidad 5).
+    //•	Se inicializan en 0
+    //•	Se irán actualizando conforme el usuario avance contestando los cuestionarios
+    //•	Pueden usarse para:
+    //o	Promedios
 
     static String[] OPCIONES_TITULOS = {
             "Estructura atómica",
@@ -37,16 +51,36 @@ public class SERQ {
             "Estudiar teoría y práctica en los lapbooks."
     };
 
+    //¿Qué representan?
+    //Son menús de opciones con:
+    //•	Títulos de temas
+    //•	Descripciones de cada tema
+    //•	Se usan al crear un recordatorio
+
     static String[] TITULOSr = new String[50];
     static String[] CONTENIDOS = new String[50];
     static int TOTALr = 0;
     static String[] FECHAS = new String[50];
+
+    //Marcan la cantidad de recordatorios que pueden ser creados (50 recordatorios con título, contenido y fecha)
 
     static String[] TITULOS = new String[43];
     static String[] ESTADO = new String[43];
     static int TOTAL = 43;   // Número de tarjetas cargadas
     static Scanner scanner = new Scanner(System.in);
     static Scanner sc = new Scanner(System.in);
+
+    //¿Qué representan?
+    //•	TITULOS → tarjetas de estudio ya cargadas
+    //•	ESTADO → estado de cada tarjeta
+    //o	"PENDIENTE"
+    //o	posiblemente luego "VISTO", "APRENDIDO", etc.
+    //•	TOTAL → número total de tarjetas
+    // El for final:
+    //for (int i = 0; i < TOTAL; i++) {
+    //    ESTADO[i] = "PENDIENTE";
+    //}
+    //Inicializa todas las tarjetas como pendientes.
 
 
 
@@ -202,12 +236,17 @@ public class SERQ {
 
 
 
-    // ========= CAMBIAR DE USUARIO =========
-    private static boolean cambioUsuarioInicio() {
+    // ========= PRIMER INICIO DE SESION ============
+
+    //Este metodo sirve para:
+    //✔ Cambiar usuario al inicio
+    //✔ Validar que el nombre solo tenga letras
+
+     private static boolean cambioUsuarioInicio() {
 
         String nuevo;
 
-        System.out.print("Nuevo usuario: ");
+        System.out.print("Usuario: ");
         nuevo = scanner.nextLine();
 
         // VALIDAR SOLO LETRAS
@@ -223,7 +262,8 @@ public class SERQ {
         System.out.print("Contraseña: ");
         String pass = scanner.nextLine();
 
-        SistemaUsuarios.CambiarUsuario(nuevo, pass);
+        SistemaUsuarios.guardarUsuarioActual();
+        SistemaUsuarios.login(nuevo, pass);
         return true; // <-- usuario válido → continuar al menú principal
     }
 
@@ -233,7 +273,7 @@ public class SERQ {
         String nuevo;
 
         while (true) {
-            System.out.print("Nuevo usuario: ");
+            System.out.print("usuario: ");
             nuevo = scanner.nextLine();
 
             // VALIDAR QUE SOLO CONTENGA LETRAS (A-Z, a-z y espacios)
@@ -252,13 +292,24 @@ public class SERQ {
         System.out.print("Contraseña: ");
         String pass = scanner.nextLine();
 
-        SistemaUsuarios.CambiarUsuario(nuevo, pass);
+
+        SistemaUsuarios.guardarUsuarioActual();
+        SistemaUsuarios.login(nuevo, pass);
         esperarEnter();
     }
 
 
-    public static class SistemaUsuarios {
+    //SistemaUsuarios:
+    //
+    //✔ Guarda usuarios en memoria
+    //✔ Cambia entre perfiles
+    //✔ Guarda progreso antes de cambiar de usuario
+    //✔ Restaura progreso al entrar
+    //✔ Evita mezclar datos
+    //
+    //Es como una mini base de datos sin archivos.
 
+    public static class SistemaUsuarios {
         private static HashMap<String, Perfil> usuarios = new HashMap<>();
         private static Perfil usuarioActual = null;
 
@@ -268,48 +319,126 @@ public class SERQ {
 
         public static void login(String usuario, String password) {
 
+            // Guardar el usuario anterior antes de cambiar (si existe)
+
             if (!usuarios.containsKey(usuario)) {
                 usuarios.put(usuario, new Perfil(usuario));
             }
 
             usuarioActual = usuarios.get(usuario);
+
+            // Cargar los datos del perfil a las variables globales de SERQ
+            cargarUsuarioActual();
 
             System.out.println("\nInicio de sesión exitoso como: " + usuario);
         }
 
         public static void CambiarUsuario(String usuario, String password) {
+            login(usuario, password);
+        }
 
-            if (!usuarios.containsKey(usuario)) {
-                usuarios.put(usuario, new Perfil(usuario));
+        // Llamar antes de cerrar sesión / cambiar a otro usuario
+        public static void guardarUsuarioActual() {
+            if (usuarioActual == null) return;
+            Perfil p = usuarioActual;
+
+            // Guardar calificaciones
+            p.calificaciones[0] = califU1;
+            p.calificaciones[1] = califU2;
+            p.calificaciones[2] = califU3;
+            p.calificaciones[3] = califU4;
+            p.calificaciones[4] = califU5;
+            // si hay mas, ajústalo
+
+            // Guardar estado de tarjetas
+            for (int i = 0; i < SERQ.TOTAL; i++) {
+                p.estadoTarjetas[i] = SERQ.ESTADO[i];
             }
 
-            usuarioActual = usuarios.get(usuario);
+            // Guardar recordatorios
+            p.totalRecordatorios = SERQ.TOTALr;
+            for (int i = 0; i < 50; i++) {
+                p.titulosRecordatorios[i] = SERQ.TITULOSr[i];
+                p.contenidosRecordatorios[i] = SERQ.CONTENIDOS[i];
+                p.fechasRecordatorios[i] = SERQ.FECHAS[i];
+            }
+        }
 
-            System.out.println("\nCambio de usuario exitoso. Nuevo usuario activo: " + usuario);
+        // Cargar datos del perfil a las variables globales del programa
+        public static void cargarUsuarioActual() {
+            if (usuarioActual == null) return;
+            Perfil p = usuarioActual;
+
+            // Cargar calificaciones
+            if (p.calificaciones != null && p.calificaciones.length >= 5) {
+                califU1 = (int) p.calificaciones[0];
+                califU2 = (int) p.calificaciones[1];
+                califU3 = (int) p.calificaciones[2];
+                califU4 = (int) p.calificaciones[3];
+                califU5 = (int) p.calificaciones[4];
+            }
+
+            // Cargar estado de tarjetas
+            for (int i = 0; i < SERQ.TOTAL; i++) {
+                if (p.estadoTarjetas[i] != null) {
+                    SERQ.ESTADO[i] = p.estadoTarjetas[i];
+                } else {
+                    SERQ.ESTADO[i] = "PENDIENTE";
+                }
+            }
+
+            // Cargar recordatorios
+            SERQ.TOTALr = p.totalRecordatorios;
+            for (int i = 0; i < 50; i++) {
+                SERQ.TITULOSr[i] = p.titulosRecordatorios[i];
+                SERQ.CONTENIDOS[i] = p.contenidosRecordatorios[i];
+                SERQ.FECHAS[i] = p.fechasRecordatorios[i];
+            }
         }
     }
+
+    //Perfil:
+    //
+    //✔ Es la estructura de datos del usuario
+    //✔ Guarda todo su progreso
+    //✔ Se crea una sola vez por usuario
+    //✔ Se usa para guardar / cargar datos
+    //
+
 
     public static class Perfil {
         String nombreUsuario;
 
-        // Ejemplo de progreso que se guarda por usuario
+        // Progreso / calificaciones
         double[] calificaciones = new double[6];
         boolean[] unidadesContestadas = new boolean[6];
+
+        // Estado de tarjetas (lo que ahora está en ESTADO[])
+        String[] estadoTarjetas = new String[43];
+
+        // Recordatorios
+        String[] titulosRecordatorios = new String[50];
+        String[] contenidosRecordatorios = new String[50];
+        String[] fechasRecordatorios = new String[50];
+        int totalRecordatorios = 0;
 
         public Perfil(String nombreUsuario) {
             this.nombreUsuario = nombreUsuario;
 
             for (int i = 0; i < 6; i++) {
-                calificaciones[i] = -1; // N/A
+                calificaciones[i] = 0;
                 unidadesContestadas[i] = false;
             }
+            for (int i = 0; i < 43; i++) {
+                estadoTarjetas[i] = "PENDIENTE";
+            }
+            totalRecordatorios = 0;
         }
     }
 
-    // ========= FUNCIONES DE APOYO =========
 
 
-    // ======= AQUÍ VAN TUS MÓDULOS REALES =======
+    // ======= AQUÍ VAN LOS MÓDULOS  =======
     public static void menuTarjetas() {
         int opcionTarjetas=-1;
 
@@ -908,8 +1037,21 @@ public class SERQ {
                     System.out.println("===========================================================================================================================================");
                     System.out.println("|                                                        ¿QUÉ ES LA QUÍMICA?                                                              |");
                     System.out.println("===========================================================================================================================================");
-                    System.out.println("| La química es la ciencia que estudia la materia, su composición, estructura, propiedades y cómo cambia en diversas reacciones químicas. |");
+                    System.out.println("| La química es la ciencia que estudia la materia, su composición, estructura, propiedades y las transformaciones que experimenta.        |");
+                    System.out.println("| Se relaciona con fenómenos que ocurren a nivel microscópico (átomos y moléculas) y macroscópico (lo que podemos ver y medir).           |");
+                    System.out.println("|                                                                                                                                         |");
+                    System.out.println("| Esta disciplina se divide en ramas como:                                                                                                |");
+                    System.out.println("| - Química general: principios básicos de la materia y la energía.                                                                       |");
+                    System.out.println("| - Química inorgánica: estudia los compuestos que no contienen carbono.                                                                  |");
+                    System.out.println("| - Química orgánica: analiza moléculas basadas en carbono y la vida.                                                                     |");
+                    System.out.println("| - Química física: explica los procesos químicos con leyes físicas y matemáticas.                                                        |");
+                    System.out.println("| - Bioquímica: estudia las sustancias y procesos químicos de los seres vivos.                                                            |");
+                    System.out.println("| - Química analítica: identifica y cuantifica componentes de las sustancias.                                                             |");
+                    System.out.println("|                                                                                                                                         |");
+                    System.out.println("| La química tiene aplicaciones en medicina, alimentos, materiales, energía, medio ambiente, industria y prácticamente toda nuestra vida. |");
+                    System.out.println("| Gracias a ella se desarrollan medicamentos, fertilizantes, combustibles, plásticos, cosméticos y tecnologías que usamos diariamente.    |");
                     System.out.println("===========================================================================================================================================");
+
                     break;
 
                 case 2:
@@ -1005,16 +1147,39 @@ public class SERQ {
                     System.out.println("=====================================================================================================================================================================");
                     System.out.println("|                                           ¿QUÉ ES LA MATERIA?                                                                                                     |");
                     System.out.println("=====================================================================================================================================================================");
-                    System.out.println("| Es todo aquello que ocupa un lugar en el espacio y tiene masa. Está compuesta por átomos y puede encontrarse en diferentes estados físicos (sólido, líquido, gas) |");
+                    System.out.println("| La materia es todo aquello que tiene masa y ocupa un lugar en el espacio. Está formada por partículas diminutas llamadas átomos, que se combinan para formar      |");
+                    System.out.println("| moléculas y estructuras más complejas. Según las fuerzas que actúan entre sus partículas, la materia puede presentarse en distintos estados físicos: sólido,      |");
+                    System.out.println("| líquido, gas y plasma.                                                                                                                                            |");
+                    System.out.println("|                                                                                                                                                                   |");
+                    System.out.println("| - Estado sólido: las partículas están muy juntas y casi no se mueven; por eso mantienen forma y volumen definidos.                                                |");
+                    System.out.println("| - Estado líquido: las partículas están más separadas y pueden deslizarse; tienen volumen definido pero no forma fija.                                             |");
+                    System.out.println("| - Estado gaseoso: las partículas están muy separadas y se mueven libremente; no tienen forma ni volumen definidos.                                                |");
+                    System.out.println("| - Plasma: gas ionizado presente en estrellas, rayos y algunos dispositivos tecnológicos.                                                                          |");
+                    System.out.println("|                                                                                                                                                                   |");
+                    System.out.println("| La materia puede cambiar de un estado a otro mediante procesos físicos como fusión, evaporación, condensación, sublimación y solidificación, sin alterar su       |");
+                    System.out.println("| composición química. También puede experimentar cambios químicos cuando sus átomos se reorganizan para formar nuevas sustancias.                                  |");
                     System.out.println("=====================================================================================================================================================================");
                     esperarTecla();
                     break;
                 case 2:
                     limpiarPantalla();
                     System.out.println("===================================================================================");
-                    System.out.println("|                                           ¿QUÉ ES LA ENERGÍA?                   |");
+                    System.out.println("|                               ¿QUÉ ES LA ENERGÍA?                               |");
                     System.out.println("===================================================================================");
-                    System.out.println("| Es la capacidad de realizar trabajo o provocar cambios en la materia.           |");
+                    System.out.println("| La energía es la capacidad de un cuerpo o sistema para realizar trabajo, mover  |");
+                    System.out.println("| objetos, generar luz, producir calor o provocar transformaciones. Está presente |");
+                    System.out.println("| en todos los procesos físicos y químicos del universo.                          |");
+                    System.out.println("|                                                                                 |");
+                    System.out.println("| TIPOS PRINCIPALES DE ENERGÍA:                                                   |");
+                    System.out.println("| - Energía cinética: asociada al movimiento de los cuerpos.                      |");
+                    System.out.println("| - Energía potencial: almacenada en función de la posición o configuración.      |");
+                    System.out.println("| - Energía térmica: relacionada con el movimiento de las partículas.             |");
+                    System.out.println("| - Energía eléctrica: producida por el flujo de electrones.                      |");
+                    System.out.println("| - Energía química: contenida en los enlaces de los átomos y moléculas.          |");
+                    System.out.println("| - Energía lumínica o radiante: transportada por ondas electromagnéticas.        |");
+                    System.out.println("| - Energía nuclear: liberada en reacciones del núcleo atómico.                   |");
+                    System.out.println("|                                                                                 |");
+                    System.out.println("| La energía no se crea ni se destruye; solo se transforma de un tipo a otro.     |");
                     System.out.println("===================================================================================");
                     esperarTecla();
                     break;
@@ -1241,13 +1406,31 @@ public class SERQ {
             switch (opcion) {
                 case 1:
                     limpiarPantalla();
-                    System.out.println("=====================================================================================================================================");
-                    System.out.println("|                                           CLASIFICACIÓN DE LAS SUSTANCIAS PURAS                                                   |");
-                    System.out.println("=====================================================================================================================================");
-                    System.out.println("| Las sustancias puras se clasifican principalmente en elementos y compuestos.                                                      |");
-                    System.out.println("| Los elementos son sustancias simples que no pueden descomponerse en otras más sencillas mediante reacciones químicas ordinarias,  |");
-                    System.out.println("| mientras que los compuestos son sustancias formadas por la unión química de dos o más elementos en proporciones fijas.            |");
-                    System.out.println("=====================================================================================================================================");
+                    System.out.println("==================================================================================================");
+                    System.out.println("|                          CLASIFICACIÓN DE LAS SUSTANCIAS PURAS                                 |");
+                    System.out.println("==================================================================================================");
+                    System.out.println("| Las sustancias puras son formas de materia que tienen composición fija y propiedades           |");
+                    System.out.println("| características constantes. No pueden separarse por métodos físicos como filtración o          |");
+                    System.out.println("| decantación, solo mediante procesos químicos.                                                  |");
+                    System.out.println("|                                                                                                |");
+                    System.out.println("| Se dividen en dos categorías principales:                                                      |");
+                    System.out.println("|                                                                                                |");
+                    System.out.println("| ► ELEMENTOS                                                                                    |");
+                    System.out.println("| - Formados por un solo tipo de átomo.                                                          |");
+                    System.out.println("| - No pueden descomponerse en sustancias más simples mediante métodos químicos ordinarios.      |");
+                    System.out.println("| - Ejemplos: Oxígeno (O₂), Hierro (Fe), Carbono (C), Oro (Au).                                  |");
+                    System.out.println("|                                                                                                |");
+                    System.out.println("| ► COMPUESTOS                                                                                   |");
+                    System.out.println("| - Formados por la combinación química de dos o más elementos.                                  |");
+                    System.out.println("| - Tienen proporciones definidas y constantes.                                                  |");
+                    System.out.println("| - Poseen propiedades diferentes a las de los elementos que los forman.                         |");
+                    System.out.println("| - Ejemplos: Agua (H₂O), Sal (NaCl), Dióxido de carbono (CO₂).                                  |");
+                    System.out.println("|                                                                                                |");
+                    System.out.println("| Diferencias clave:                                                                             |");
+                    System.out.println("| - Un elemento está formado por un solo tipo de átomo; un compuesto por dos o más.              |");
+                    System.out.println("| - Los compuestos SOLO se separan por métodos químicos.                                         |");
+                    System.out.println("|                                                                                                |");
+                    System.out.println("==================================================================================================");
                     esperarTecla();
                     break;
                 case 2:
@@ -1757,10 +1940,14 @@ public class SERQ {
                 case 1:
                     limpiarPantalla();
                     System.out.println("=============================================================================");
-                    System.out.println("|               CONFIGURACIÓN ELECTRÓNICA CON GAS NOBLE                     |");
+                    System.out.println("|                  CONFIGURACIÓN ELECTRÓNICA CON GAS NOBLE                  |");
                     System.out.println("=============================================================================");
-                    System.out.println("|Configuración electrónica del elemento con Z=83 (Bismuto) usando gas noble |");
-                    System.out.println("|[Xe₅₄] 4f¹⁴ 5d¹⁰ 6s² 6p³                                                   |");
+                    System.out.println("| El método de gas noble permite escribir la configuración electrónica de   |");
+                    System.out.println("| un elemento usando la configuración completa del gas noble anterior como  |");
+                    System.out.println("| punto de partida, reduciendo así la longitud de la notación.              |");
+                    System.out.println("|                                                                           |");
+                    System.out.println("| Ejemplo con el elemento Bismuto (Z = 83):                                 |");
+                    System.out.println("| [Xe₅₄] 4f¹⁴ 5d¹⁰ 6s² 6p³                                                  |");
                     System.out.println("=============================================================================");
                     break;
 
@@ -1874,10 +2061,16 @@ public class SERQ {
                 case 1:
                     limpiarPantalla();
                     System.out.println("===============================================================================================================");
-                    System.out.println("|                                         ¿QUÉ ES EL ÁTOMO?                                                   |");
+                    System.out.println("|                                               ¿QUÉ ES EL ÁTOMO?                                             |");
                     System.out.println("===============================================================================================================");
-                    System.out.println("| Un átomo es la unidad básica de la materia, compuesto por un núcleo (protones y neutrones) y                |");
-                    System.out.println("| electrones que giran alrededor. Es la mínima porción de un elemento que conserva sus propiedades químicas.  |");
+                    System.out.println("| Un átomo es la unidad fundamental de la materia. Está compuesto por un núcleo central que contiene          |");
+                    System.out.println("| protones (partículas con carga positiva) y neutrones (partículas sin carga). Alrededor del núcleo se        |");
+                    System.out.println("| encuentran los electrones, partículas con carga negativa que se mueven en diferentes niveles de energía.    |");
+                    System.out.println("|                                                                                                             |");
+                    System.out.println("| Cada elemento químico está definido por su número atómico (Z), que corresponde a la cantidad de protones    |");
+                    System.out.println("| en su núcleo. Los átomos pueden unirse entre sí para formar moléculas o reaccionar para crear sustancias    |");
+                    System.out.println("| nuevas. Además, las propiedades químicas de los átomos dependen de la distribución de sus electrones,       |");
+                    System.out.println("| especialmente de los electrones de valencia.                                                                |");
                     System.out.println("===============================================================================================================");
                     esperarTecla();
                     break;
@@ -2326,23 +2519,37 @@ public class SERQ {
             switch (opcionesp) {
                 case 1:
                     limpiarPantalla();
-                    System.out.println("===========================================================================================================================");
-                    System.out.println("|                                        PRINCIPIO DE INCERTIDUMBRE DE HEISENBERG                                         |");
-                    System.out.println("===========================================================================================================================");
-                    System.out.println("| El principio de incertidumbre de Heisenberg establece que no se pueden conocer con precisión simultánea ciertos pares   |");
-                    System.out.println("| de variables físicas de una partícula, como su posición y su momento lineal. Cuanto mayor es la precisión con la que se |");
-                    System.out.println("| determina la posición, menor es la precisión con la que se puede conocer su momento (masa por velocidad), y viceversa.  |");
-                    System.out.println("===========================================================================================================================");
+                    System.out.println("==============================================================================================================================");
+                    System.out.println("|                                        PRINCIPIO DE INCERTIDUMBRE DE HEISENBERG                                            |");
+                    System.out.println("==============================================================================================================================");
+                    System.out.println("| El principio de incertidumbre, formulado por Werner Heisenberg en 1927, establece que es imposible conocer simultáneamente |");
+                    System.out.println("| con exactitud absoluta ciertos pares de magnitudes físicas de una partícula subatómica, especialmente su posición y su     |");
+                    System.out.println("| momento lineal (masa x velocidad). Esto no se debe a fallas en los instrumentos, sino a la propia naturaleza cuántica de   |");
+                    System.out.println("| la materia.                                                                                                                |");
+                    System.out.println("|                                                                                                                            |");
+                    System.out.println("| En otras palabras: mientras más precisamente se intenta medir la posición de una partícula, menos precisa será la          |");
+                    System.out.println("| información que se puede obtener sobre su momento, y viceversa. Esta limitación fundamental demuestra que, en el mundo     |");
+                    System.out.println("| cuántico, las partículas no tienen valores exactos y simultáneos de todas sus propiedades.                                 |");
+                    System.out.println("==============================================================================================================================");
+
                     esperarTecla();
                     break;
                 case 2:
                     limpiarPantalla();
                     System.out.println("==============================================================================================================");
-                    System.out.println("|                              SOLUCIONES DE LA ECUACION DE SCHRÖDINGER                                      |");
+                    System.out.println("|                              SOLUCIONES DE LA ECUACIÓN DE SCHRÖDINGER                                      |");
                     System.out.println("==============================================================================================================");
-                    System.out.println("| La ecuación de Schrödinger describe matemáticamente el comportamiento del electrón en el átomo.            |");
-                    System.out.println("| Sus soluciones son las funciones de onda ψ y sus valores permitidos dan los orbitales y los .              |");
-                    System.out.println("| niveles de energía                                                                                         |");
+                    System.out.println("| La ecuación de Schrödinger describe matemáticamente el comportamiento y la probabilidad de encontrar un    |");
+                    System.out.println("| electrón alrededor del núcleo. Sus soluciones son las funciones de onda (ψ), que contienen toda la         |");
+                    System.out.println("| información posible sobre el estado cuántico del electrón.                                                 |");
+                    System.out.println("|                                                                                                            |");
+                    System.out.println("| De estas funciones de onda se derivan los ORBITALES, que representan regiones del espacio donde existe     |");
+                    System.out.println("| mayor probabilidad de hallar al electrón. Además, las soluciones también determinan los NIVELES DE ENERGÍA |");
+                    System.out.println("| permitidos para el electrón, mostrando que este no puede tener cualquier valor de energía, sino solo       |");
+                    System.out.println("| cantidades específicas (cuantizadas).                                                                      |");
+                    System.out.println("|                                                                                                            |");
+                    System.out.println("| En resumen: la ecuación no solo predice dónde es más probable encontrar al electrón, sino también cuánta   |");
+                    System.out.println("| energía puede poseer y qué formas (orbitales) puede adoptar su distribución espacial.                      |");
                     System.out.println("==============================================================================================================");
                     esperarTecla();
                     break;
@@ -3064,21 +3271,47 @@ public class SERQ {
             switch (OPCION){
                 case 1:
                     limpiarPantalla();
-                    System.out.println("================================================================");
-                    System.out.println("|                        DEFINICIÓN                            |");
-                    System.out.println("================================================================");
-                    System.out.println("| Medida del tamaño del átomo; suele definirse por la          |");
-                    System.out.println("| mitad de la distancia entre núcleos en cristales diatómicos. |");
-                    System.out.println("================================================================");
+                    System.out.println("======================================================================");
+                    System.out.println("|                               DEFINICIÓN                           |");
+                    System.out.println("======================================================================");
+                    System.out.println("| El radio atómico es una medida del tamaño de un átomo. Se          |");
+                    System.out.println("| define comúnmente como la mitad de la distancia entre los          |");
+                    System.out.println("| núcleos de dos átomos iguales unidos en un cristal o molécula.     |");
+                    System.out.println("|                                                                    |");
+                    System.out.println("| No existe un borde físico del átomo, ya que los electrones no      |");
+                    System.out.println("| tienen posiciones fijas; por eso el radio atómico es un valor      |");
+                    System.out.println("| estimado basado en distancias promedio.                            |");
+                    System.out.println("|                                                                    |");
+                    System.out.println("| El radio atómico depende del número atómico, de la energía de      |");
+                    System.out.println("| los electrones y del tipo de enlace con otros átomos. Por eso      |");
+                    System.out.println("| puede variar según el modelo usado (covalente, metálico, iónico).  |");
+                    System.out.println("======================================================================");
                     esperarMENU();
                     break;
                 case 2:
                     limpiarPantalla();
-                    System.out.println("==========================================================================================");
-                    System.out.println("|                                   CÓMO SE MIDEN                                        |");
-                    System.out.println("==========================================================================================");
-                    System.out.println("| Difracción de rayos X, cálculos teóricos y medidas de distancia interatómica.          |");
-                    System.out.println("==========================================================================================");
+                    System.out.println("===========================================================================================");
+                    System.out.println("|                                   CÓMO SE MIDEN                                         |");
+                    System.out.println("===========================================================================================");
+                    System.out.println("| El radio atómico no puede medirse directamente, ya que los electrones no tienen una     |");
+                    System.out.println("| posición fija alrededor del núcleo. Por ello, se determina utilizando métodos físicos   |");
+                    System.out.println("| y cálculos teóricos que permiten estimar la distancia promedio entre átomos.            |");
+                    System.out.println("|                                                                                         |");
+                    System.out.println("| • Difracción de rayos X: Permite obtener la distancia entre núcleos en cristales,       |");
+                    System.out.println("|   a partir de la cual se calcula el radio atómico.                                      |");
+                    System.out.println("|                                                                                         |");
+                    System.out.println("| • Difracción electrónica y difracción de neutrones: Técnicas que también determinan     |");
+                    System.out.println("|   distancias interatómicas en sólidos y moléculas.                                      |");
+                    System.out.println("|                                                                                         |");
+                    System.out.println("| • Cálculos teóricos (modelo cuántico): Usan funciones de onda del electrón para         |");
+                    System.out.println("|   estimar el tamaño promedio de la nube electrónica.                                    |");
+                    System.out.println("|                                                                                         |");
+                    System.out.println("| • Modelos específicos: Según el tipo de enlace se define un tipo de radio distinto:     |");
+                    System.out.println("|    - Radio covalente: Distancia entre núcleos en un enlace covalente.                   |");
+                    System.out.println("|    - Radio metálico: Mitad de la distancia entre núcleos en un cristal metálico.        |");
+                    System.out.println("|    - Radio iónico: Calculado en sales iónicas según el catión y anión involucrados.     |");
+                    System.out.println("===========================================================================================");
+
                     esperarMENU();
                     break;
                 case 3:
@@ -3150,20 +3383,29 @@ public class SERQ {
                 case 1:
                     limpiarPantalla();
                     System.out.println("=============================================================================");
-                    System.out.println("|                                 METAL:                                    |");
+                    System.out.println("|                                 METAL                                     |");
                     System.out.println("=============================================================================");
-                    System.out.println("| Buen conductor, maleable, tendencia a ceder electrones (formar cationes). |");
+                    System.out.println("| Los metales son elementos químicos caracterizados por su brillo, buena    |");
+                    System.out.println("| conductividad eléctrica y térmica, así como por su capacidad de ceder     |");
+                    System.out.println("| electrones para formar cationes. Son generalmente sólidos a temperatura   |");
+                    System.out.println("| ambiente (excepto el mercurio), dúctiles, maleables y con alta densidad.  |");
+                    System.out.println("| Forman enlaces metálicos y suelen presentar puntos de fusión elevados.    |");
                     System.out.println("=============================================================================");
+
                     esperarMENU();
                     break;
                 case 2:
                     limpiarPantalla();
-                    System.out.println("=======================================================================");
-                    System.out.println("|                              NO METAL:                              |");
-                    System.out.println("=======================================================================");
-                    System.out.println("| No metal: mal conductor, puede ganar electrones (formar aniones) o  |");
-                    System.out.println("| compartirlos en enlaces covalentes.                                 |");
-                    System.out.println("=======================================================================");
+                    System.out.println("========================================================================");
+                    System.out.println("|                              NO METAL                                |");
+                    System.out.println("========================================================================");
+                    System.out.println("| Los no metales son elementos que, a diferencia de los metales, no    |");
+                    System.out.println("| conducen bien el calor ni la electricidad. Tienen tendencia a ganar  |");
+                    System.out.println("| electrones para formar aniones o a compartirlos mediante enlaces     |");
+                    System.out.println("| covalentes. Suelen encontrarse en estado sólido, líquido o gaseoso,  |");
+                    System.out.println("| presentan baja densidad, no son maleables ni dúctiles, y carecen de  |");
+                    System.out.println("| brillo metálico.                                                     |");
+                    System.out.println("========================================================================");
                     esperarMENU();
                     break;
                 case 3:
@@ -3171,18 +3413,52 @@ public class SERQ {
                     System.out.println("====================================================================");
                     System.out.println("|                  PROPIEDADES FÍSICAS Y QUÍMICAS                  |");
                     System.out.println("====================================================================");
-                    System.out.println("| Comparación: punto de fusión, conductividad, electronegatividad, |");
-                    System.out.println("| formación de óxidos ácidos/ básicos.                             |");
+                    System.out.println("| Comparación entre metales, no metales y metaloides según sus     |");
+                    System.out.println("| propiedades físicas y periódicas más importantes:                |");
+                    System.out.println("--------------------------------------------------------------------");
+                    System.out.println("| • Punto de fusión y ebullición:                                  |");
+                    System.out.println("|   - Metales: generalmente altos.                                 |");
+                    System.out.println("|   - No metales: por lo regular bajos (especialmente gases).      |");
+                    System.out.println("|   - Metaloides: valores intermedios.                             |");
+                    System.out.println("--------------------------------------------------------------------");
+                    System.out.println("| • Conductividad eléctrica y térmica:                             |");
+                    System.out.println("|   - Metales: muy buena.                                          |");
+                    System.out.println("|   - No metales: mala o nula.                                     |");
+                    System.out.println("|   - Metaloides: semiconductores.                                 |");
+                    System.out.println("--------------------------------------------------------------------");
+                    System.out.println("| • Electronegatividad:                                            |");
+                    System.out.println("|   - Metales: baja (tienden a ceder electrones).                  |");
+                    System.out.println("|   - No metales: alta (tienden a ganar electrones).               |");
+                    System.out.println("|   - Metaloides: intermedia.                                      |");
+                    System.out.println("--------------------------------------------------------------------");
+                    System.out.println("| • Formación de óxidos:                                           |");
+                    System.out.println("|   - Metales: forman óxidos básicos.                              |");
+                    System.out.println("|   - No metales: forman óxidos ácidos.                            |");
+                    System.out.println("|   - Metaloides: suelen formar óxidos anfóteros.                  |");
                     System.out.println("====================================================================");
+
                     esperarMENU();
                     break;
                 case 4:
                     limpiarPantalla();
-                    System.out.println("===================================================================");
-                    System.out.println("|                EJEMPLOS Y TENDENCIAS PERIÓDICAS                 |");
-                    System.out.println("===================================================================");
-                    System.out.println("| Na (metal), O (no metal), metaloides (propiedades intermedias). |");
-                    System.out.println("===================================================================");
+                    System.out.println("====================================================================");
+                    System.out.println("|                EJEMPLOS Y TENDENCIAS PERIÓDICAS                  |");
+                    System.out.println("====================================================================");
+                    System.out.println("| Ejemplos:                                                        |");
+                    System.out.println("|   • Metales: Na, Fe, Cu, Al – brillantes, conductores y ceden    |");
+                    System.out.println("|     electrones para formar cationes.                             |");
+                    System.out.println("|   • No metales: O, S, N, Cl – gases o sólidos frágiles, con      |");
+                    System.out.println("|     alta electronegatividad.                                     |");
+                    System.out.println("|   • Metaloides: Si, Ge, As – conductividad intermedia, útiles    |");
+                    System.out.println("|     en semiconductores.                                          |");
+                    System.out.println("--------------------------------------------------------------------");
+                    System.out.println("| Tendencias periódicas:                                           |");
+                    System.out.println("|   • Radio atómico: aumenta hacia abajo y hacia la izquierda.     |");
+                    System.out.println("|   • Electronegatividad: aumenta hacia arriba y hacia la derecha. |");
+                    System.out.println("|   • Energía de ionización: misma tendencia que la                |");
+                    System.out.println("|     electronegatividad.                                          |");
+                    System.out.println("|   • Carácter metálico: aumenta hacia abajo y hacia la izquierda. |");
+                    System.out.println("====================================================================");
                     esperarMENU();
                     break;
                 case 5:
@@ -3417,9 +3693,13 @@ public class SERQ {
                     limpiarPantalla();
                     System.out.println("===============================================================================");
                     System.out.println("|                                 DEFINICIÓN                                  |");
-                    System.out.println("===============================================================================");
-                    System.out.println("| Energía mínima para remover un electrón de un átomo/ión en estado gaseoso.  |");
-                    System.out.println("===============================================================================");
+                    System.out.println("=============================================================================== ");
+                    System.out.println("| La energía de ionización es la cantidad mínima de energía necesaria para    |");
+                    System.out.println("| remover un electrón de un átomo o ión en estado gaseoso. Este proceso       |");
+                    System.out.println("| produce un ion positivo (catión). La energía de ionización refleja qué tan  |");
+                    System.out.println("| fuertemente un átomo mantiene a sus electrones externos.                    |");
+                    System.out.println("=============================================================================== ");
+
                     esperarMENU();
                     break;
                 case 2:
@@ -3498,12 +3778,17 @@ public class SERQ {
             switch (OPCION){
                 case 1:
                     limpiarPantalla();
-                    System.out.println("======================================================");
-                    System.out.println("|                     DEFINICIÓN                     |");
-                    System.out.println("======================================================");
-                    System.out.println("| Electrones de valencia = electrones en la capa más |");
-                    System.out.println("| externa que participan en enlaces.                 |");
-                    System.out.println("======================================================");
+                    System.out.println("========================================================");
+                    System.out.println("|                     DEFINICIÓN                       |");
+                    System.out.println("========================================================");
+                    System.out.println("| Los electrones de valencia son los electrones que    |");
+                    System.out.println("| se encuentran en la capa electrónica más externa     |");
+                    System.out.println("| de un átomo. Estos electrones determinan su          |");
+                    System.out.println("| reactividad química y participan directamente en la  |");
+                    System.out.println("| formación de enlaces iónicos, covalentes o metálicos |");
+                    System.out.println("| con otros átomos.                                    |");
+                    System.out.println("========================================================");
+
                     esperarMENU();
                     break;
                 case 2:
@@ -3584,12 +3869,25 @@ public class SERQ {
             switch (OPCION){
                 case 1:
                     limpiarPantalla();
-                    System.out.println("================================================================");
-                    System.out.println("|                   ELECTRONES PERIFÉRICOS:                    |");
-                    System.out.println("================================================================");
-                    System.out.println("| Término usado para referirse a los electrones que participan |");
-                    System.out.println("| activamente en enlaces químicos y reacciones                 |");
-                    System.out.println("================================================================");
+                    System.out.println("==================================================================");
+                    System.out.println("|                   ELECTRONES PERIFÉRICOS:                      |");
+                    System.out.println("==================================================================");
+                    System.out.println("| Son los electrones que se encuentran en las capas externas     |");
+                    System.out.println("| del átomo, especialmente en el nivel energético más lejano.    |");
+                    System.out.println("| Estos electrones determinan el comportamiento químico de un    |");
+                    System.out.println("| elemento, ya que participan en enlaces, reacciones y           |");
+                    System.out.println("| transferencia de electrones.                                   |");
+                    System.out.println("------------------------------------------------------------------");
+                    System.out.println("| También se relacionan con las propiedades periódicas como la   |");
+                    System.out.println("| electronegatividad, energía de ionización y afinidad           |");
+                    System.out.println("| electrónica.                                                   |");
+                    System.out.println("------------------------------------------------------------------");
+                    System.out.println("| Los electrones periféricos suelen coincidir con los            |");
+                    System.out.println("| electrones de valencia, aunque en algunos contextos técnicos   |");
+                    System.out.println("| pueden incluir electrones de capas cercanas si influyen en el  |");
+                    System.out.println("| comportamiento químico.                                        |");
+                    System.out.println("==================================================================");
+
                     esperarMENU();
                     break;
                 case 2:
@@ -3768,9 +4066,23 @@ public class SERQ {
                     System.out.println("===============================================================================");
                     System.out.println("|                                  HISTORIA                                   |");
                     System.out.println("===============================================================================");
-                    System.out.println("| Dimitri Mendeleiev propuso una tabla basada en masas atómicas y propiedades |");
-                    System.out.println("| La versión moderna se basa en Z (Número atómico).                           |");
+                    System.out.println("| La tabla periódica moderna es el resultado de siglos de estudio sobre los   |");
+                    System.out.println("| elementos. Antes de Mendeleiev, varios científicos intentaron organizarlos  |");
+                    System.out.println("| según sus propiedades, pero sin éxito completo.                             |");
+                    System.out.println("-------------------------------------------------------------------------------");
+                    System.out.println("| En 1869, Dimitri Mendeleiev organizó los elementos conocidos según su masa  |");
+                    System.out.println("| atómica y sus propiedades químicas. Incluso dejó espacios vacíos para los   |");
+                    System.out.println("| elementos que aún no habían sido descubiertos, prediciendo sus propiedades. |");
+                    System.out.println("-------------------------------------------------------------------------------");
+                    System.out.println("| Más adelante, Henry Moseley (1913) determinó que el orden correcto debía    |");
+                    System.out.println("| basarse en el número atómico (Z), no en la masa. Esto corrigió anomalías y  |");
+                    System.out.println("| permitió una clasificación más precisa.                                     |");
+                    System.out.println("-------------------------------------------------------------------------------");
+                    System.out.println("| La tabla actual incorpora conceptos modernos como niveles de energía,       |");
+                    System.out.println("| estructura electrónica y modelos cuánticos, lo que explica la periodicidad  |");
+                    System.out.println("| de las propiedades de los elementos.                                        |");
                     System.out.println("===============================================================================");
+
                     esperarMENU();
                     break;
                 case 3:
@@ -3975,7 +4287,6 @@ public class SERQ {
             switch (opcion) {
                 case 1:
                     limpiarPantalla();
-
                     System.out.println("========================================================================================================================");
                     System.out.println("|                                               ENLACE QUÍMICO                                                         |");
                     System.out.println("========================================================================================================================");
@@ -12738,8 +13049,6 @@ public class SERQ {
                 "\u001B[0m");
     }
 
-
-
     public static void serq(){
         System.out.println("\u001B[38;2;152;255;152m");
         System.out.println("【︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻︻】");
@@ -12758,5 +13067,3 @@ public class SERQ {
         System.out.println("\u001B[0m");
     }
 }
-
-
