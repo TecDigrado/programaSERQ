@@ -5,6 +5,12 @@ import java.time.LocalDate;
 
 public class SERQ {
 
+    // ===== TARJETAS (usuario activo) =====
+    static String[] TITULOS_TARJETAS = new String[50];
+    static String[] CONTENIDOS_TARJETAS = new String[50];
+    static int TOTAL_TARJETAS = 0;
+
+
     // 1. ¿Qué significa static aquí?
     //Cuando una variable es static:
     //•	Pertenece a la clase, no a un objeto
@@ -16,6 +22,7 @@ public class SERQ {
     static int califU3 = 0;
     static int califU4 = 0;
     static int califU5 = 0;
+
 
     //Son calificaciones (De Unidad 1 a Unidad 5).
     //•	Se inicializan en 0
@@ -360,6 +367,15 @@ public class SERQ {
                 p.contenidosRecordatorios[i] = SERQ.CONTENIDOS[i];
                 p.fechasRecordatorios[i] = SERQ.FECHAS[i];
             }
+
+            // ===== GUARDAR TARJETAS =====
+            p.totalTarjetas = TOTAL_TARJETAS;
+
+            for (int i = 0; i < 50; i++) {
+                p.titulosTarjetas[i] = TITULOS_TARJETAS[i];
+                p.contenidosTarjetas[i] = CONTENIDOS_TARJETAS[i];
+            }
+
         }
 
         // Cargar datos del perfil a las variables globales del programa
@@ -392,6 +408,15 @@ public class SERQ {
                 SERQ.CONTENIDOS[i] = p.contenidosRecordatorios[i];
                 SERQ.FECHAS[i] = p.fechasRecordatorios[i];
             }
+
+            // ===== CARGAR TARJETAS =====
+            TOTAL_TARJETAS = p.totalTarjetas;
+
+            for (int i = 0; i < 50; i++) {
+                TITULOS_TARJETAS[i] = p.titulosTarjetas[i];
+                CONTENIDOS_TARJETAS[i] = p.contenidosTarjetas[i];
+            }
+
         }
     }
 
@@ -420,6 +445,11 @@ public class SERQ {
         String[] fechasRecordatorios = new String[50];
         int totalRecordatorios = 0;
 
+        // Tarjetas personales
+        String[] titulosTarjetas = new String[50];
+        String[] contenidosTarjetas = new String[50];
+        int totalTarjetas = 0;
+
         public Perfil(String nombreUsuario) {
             this.nombreUsuario = nombreUsuario;
 
@@ -431,6 +461,7 @@ public class SERQ {
                 estadoTarjetas[i] = "PENDIENTE";
             }
             totalRecordatorios = 0;
+            totalTarjetas = 0;
         }
     }
 
