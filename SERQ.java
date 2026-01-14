@@ -1,3 +1,4 @@
+
 import java.util.Scanner;
 import java.util.HashMap;
 import java.time.LocalDate;
@@ -353,7 +354,7 @@ public class SERQ {
             p.calificaciones[2] = califU3;
             p.calificaciones[3] = califU4;
             p.calificaciones[4] = califU5;
-            // si hay mas, ajústalo
+            // si hay más, ajústalo
 
             // Guardar estado de tarjetas
             for (int i = 0; i < SERQ.TOTAL; i++) {
@@ -10113,13 +10114,15 @@ public class SERQ {
                         System.out.print("Nueva fecha: ");
                         nuevaFecha = scanner.nextLine().trim();
 
-                        if (!nuevaFecha.matches("\\d{2}/\\d{2}/\\d{4}")) {
-                            System.out.println("\n=======================================");
-                            System.out.println("| Formato inválido. Intente de nuevo. |");
-                            System.out.println("=======================================");
+                        if (!fechaValida(nuevaFecha)) {
+                            System.out.println("\n===============================================");
+                            System.out.println("| Fecha inválida. Revisa día, mes y año.      |");
+                            System.out.println("| Ejemplos válidos: 28/02/2025, 29/02/2024   |");
+                            System.out.println("===============================================");
                             pausar();
                             nuevaFecha = "";
                         }
+
                     } while (nuevaFecha.isEmpty());
 
                     FECHAS[indice] = nuevaFecha;
@@ -10129,6 +10132,7 @@ public class SERQ {
                     System.out.println("================================");
                     pausar();
                 }
+
 
                 case 0 -> {
                     System.out.println("\n==========================");
@@ -10155,6 +10159,41 @@ public class SERQ {
     // ==========================================================
     // Funciones auxiliares
     // ==========================================================
+
+    public static boolean fechaValida(String fecha) {
+
+        if (!fecha.matches("\\d{2}/\\d{2}/\\d{4}")) {
+            return false;
+        }
+
+        String[] partes = fecha.split("/");
+        int dia = Integer.parseInt(partes[0]);
+        int mes = Integer.parseInt(partes[1]);
+        int anio = Integer.parseInt(partes[2]);
+
+        // Validar mes
+        if (mes < 1 || mes > 12) {
+            return false;
+        }
+
+        // Días máximos por mes
+        int diasMaximos;
+
+        switch (mes) {
+            case 4, 6, 9, 11 -> diasMaximos = 30;
+            case 2 -> {
+                // Año bisiesto
+                boolean bisiesto =
+                        (anio % 4 == 0 && anio % 100 != 0) || (anio % 400 == 0);
+                diasMaximos = bisiesto ? 29 : 28;
+            }
+            default -> diasMaximos = 31;
+        }
+
+        // Validar día
+        return dia >= 1 && dia <= diasMaximos;
+    }
+
     public static void pausar() {
         System.out.println("\n");
         System.out.println("====================================");
@@ -12695,10 +12734,6 @@ public class SERQ {
 
     public static void AdministrarContenido() {
 
-        String[] TITULOS = new String[50];
-        String[] CONTENIDOS = new String[50];
-        int[] TOTAL_TARJETAS = {0}; // contador real
-
         int opcion = -1;
 
         do {
@@ -12732,19 +12767,23 @@ public class SERQ {
             switch (opcion) {
 
                 case 1:
-                    agregarTarjeta(TITULOS, CONTENIDOS, TOTAL_TARJETAS);
+                    limpiarPantalla();
+                    agregarTarjeta();
                     break;
 
                 case 2:
-                    verTarjetas(TITULOS, CONTENIDOS, TOTAL_TARJETAS[0]);
+                    limpiarPantalla();
+                    verTarjetas();
                     break;
 
                 case 3:
-                    eliminarTarjetaPorNumero(TITULOS, CONTENIDOS, TOTAL_TARJETAS);
+                    limpiarPantalla();
+                    eliminarTarjeta();
                     break;
 
                 case 4:
-                    editarTarjetaPorNumero(TITULOS,CONTENIDOS, TOTAL_TARJETAS);
+                    limpiarPantalla();
+                    editarTarjeta();
                     break;
 
                 case 0:
@@ -12766,82 +12805,33 @@ public class SERQ {
         } while (opcion != 0);
     }
 
-    public static void agregarTarjeta(String[] TITULOS, String[] CONTENIDOS, int[] TOTAL_TARJETAS) {
+    public static void agregarTarjeta() {
 
-        // Límite de tarjetas
-        if (TOTAL_TARJETAS[0] >= 50) {
-            limpiarPantalla();
-            System.out.println("================================================");
-            System.out.println("|     No se pueden agregar más tarjetas (50).  |");
-            System.out.println("================================================");
+        if (TOTAL_TARJETAS >= 50) {
+            System.out.println("=================================");
+            System.out.println("| Límite de tarjetas alcanzado  |");
+            System.out.println("=================================");
             esperarEnter();
             return;
         }
 
-        while (true) {
-            limpiarPantalla();
+        System.out.println("\n");
+        System.out.println("=======================");
+        System.out.print("Título de la tarjeta: ");
+        TITULOS_TARJETAS[TOTAL_TARJETAS] = scanner.nextLine();
 
-            System.out.println("================================================");
-            System.out.println("|               AGREGAR NUEVA TARJETA          |");
-            System.out.println("================================================");
-            System.out.printf("  Tarjetas almacenadas: %d / 50%n", TOTAL_TARJETAS[0]);
-            System.out.println("------------------------------------------------");
-            System.out.println(" Escribe 0 en cualquier campo para regresar al menú anterior.");
-            System.out.println("------------------------------------------------\n");
+        System.out.print("Contenido de la tarjeta: ");
+        CONTENIDOS_TARJETAS[TOTAL_TARJETAS] = scanner.nextLine();
 
-            // Solicitar título
-            System.out.print("  Ingrese el TÍTULO del tema\n> ");
-            String titulo = scanner.nextLine().trim();
+        TOTAL_TARJETAS++;
 
-            // Opción para regresar
-            if (titulo.equals("0")) {
-                System.out.println("\nRegresando al menú anterior...");
-                esperarEnter();
-                return;
-            }
-
-            if (titulo.isEmpty()) {
-                System.out.println("\n--------------------------------------------------");
-                System.out.println("|       El título NO puede estar vacío. Intenta. |");
-                System.out.println("--------------------------------------------------");
-                esperarEnter();
-                continue;
-            }
-
-            // Solicitar contenido
-            System.out.print("\n  Ingrese el CONTENIDO o descripción\n> ");
-            String contenido = scanner.nextLine().trim();
-
-            // Opción para regresar
-            if (contenido.equals("0")) {
-                System.out.println("\nRegresando al menú anterior...");
-                esperarEnter();
-                return;
-            }
-
-            if (contenido.isEmpty()) {
-                System.out.println("\n---------------------------------------------------");
-                System.out.println("|     El contenido NO puede estar vacío. Intenta. |");
-                System.out.println("---------------------------------------------------");
-                esperarEnter();
-                continue;
-            }
-
-            // Guardar tarjeta
-            int pos = TOTAL_TARJETAS[0];
-            TITULOS[pos] = titulo;
-            CONTENIDOS[pos] = contenido;
-            TOTAL_TARJETAS[0]++;
-
-            System.out.println("\n================================================");
-            System.out.println("|          Tarjeta guardada correctamente      |");
-            System.out.println("================================================");
-            esperarEnter();
-            break;
-        }
+        System.out.println("\nTarjeta agregada correctamente.");
+        System.out.println("===================================");
+        esperarEnter();
     }
 
-    public static void verTarjetas(String[] TITULOS, String[] CONTENIDOS, int TOTAL_TARJETAS) {
+
+    public static void verTarjetas() {
         limpiarPantalla();
 
         if (TOTAL_TARJETAS == 0) {
@@ -12859,20 +12849,21 @@ public class SERQ {
 
         for (int i = 0; i < TOTAL_TARJETAS; i++) {
             System.out.println("------------------------------------------------");
-            System.out.printf(" 🔹 Tarjeta #%d%n", (i + 1));
+            System.out.printf(" - Tarjeta #%d%n", (i + 1));
             System.out.println("------------------------------------------------");
-            System.out.printf(" 📌 Título: %s%n", TITULOS[i]);
-            System.out.println(" 📝 Contenido:");
-            System.out.println("   " + CONTENIDOS[i]);
+            System.out.printf("  Título: %s%n", TITULOS_TARJETAS[i]);
+            System.out.println(" Contenido:");
+            System.out.println("   " + CONTENIDOS_TARJETAS[i]);
             System.out.println("------------------------------------------------\n");
         }
 
         esperarEnter();
     }
 
-    public static void eliminarTarjetaPorNumero(String[] TITULOS, String[] CONTENIDOS, int[] TOTAL_TARJETAS) {
+    public static void eliminarTarjeta() {
 
-        if (TOTAL_TARJETAS[0] == 0) {
+        // VALIDACIÓN: no hay tarjetas
+        if (TOTAL_TARJETAS == 0) {
             limpiarPantalla();
             System.out.println("=================================================");
             System.out.println("|        No hay tarjetas para eliminar.         |");
@@ -12887,15 +12878,22 @@ public class SERQ {
             System.out.println("=================================================");
             System.out.println("|            ELIMINAR TARJETA POR NÚMERO        |");
             System.out.println("=================================================");
-            System.out.printf("  Total de tarjetas: %d%n", TOTAL_TARJETAS[0]);
+            System.out.println("  Total de tarjetas: " + TOTAL_TARJETAS);
             System.out.println("-------------------------------------------------");
             System.out.println("  Escribe 0 para regresar al menú anterior.");
             System.out.println("-------------------------------------------------");
+
+            // MOSTRAR LISTA DE TARJETAS
+            for (int i = 0; i < TOTAL_TARJETAS; i++) {
+                System.out.println("  " + (i + 1) + ". " + TITULOS_TARJETAS[i]);
+            }
+
+            System.out.println("-------------------------------------------------");
             System.out.print("  Ingrese el número de la tarjeta a eliminar: ");
 
-            // VALIDACIÓN — entrada no numérica
+            // VALIDACIÓN: entrada no numérica
             if (!scanner.hasNextInt()) {
-                scanner.nextLine(); // limpiar basura
+                scanner.nextLine();
                 System.out.println("\n===============================================");
                 System.out.println("| Entrada inválida. Debes ingresar un número. |");
                 System.out.println("===============================================");
@@ -12904,18 +12902,17 @@ public class SERQ {
             }
 
             int numero = scanner.nextInt();
-            scanner.nextLine(); // limpiar buffer
+            scanner.nextLine();
 
-            // Opción para regresar
+            // REGRESAR AL MENÚ
             if (numero == 0) {
-                esperarEnter();
                 return;
             }
 
             int indice = numero - 1;
 
-            // VALIDACIÓN — fuera de rango
-            if (indice < 0 || indice >= TOTAL_TARJETAS[0]) {
+            // VALIDACIÓN: fuera de rango
+            if (indice < 0 || indice >= TOTAL_TARJETAS) {
                 System.out.println("\n===============================================");
                 System.out.println("| El número no corresponde a ninguna tarjeta. |");
                 System.out.println("===============================================");
@@ -12923,15 +12920,30 @@ public class SERQ {
                 continue;
             }
 
-            // ELIMINAR TARJETA (compactando el arreglo)
-            for (int i = indice; i < TOTAL_TARJETAS[0] - 1; i++) {
-                TITULOS[i] = TITULOS[i + 1];
-                CONTENIDOS[i] = CONTENIDOS[i + 1];
+            // CONFIRMACIÓN
+            System.out.println("\n-----------------------------------------------");
+            System.out.println("¿Estás seguro de eliminar la tarjeta?");
+            System.out.println("Título: " + TITULOS_TARJETAS[indice]);
+            System.out.print("Confirmar (S/N): ");
+            String confirmacion = scanner.nextLine();
+
+            if (!confirmacion.equalsIgnoreCase("S")) {
+                System.out.println("\nOperación cancelada.");
+                esperarEnter();
+                return;
             }
 
-            TOTAL_TARJETAS[0]--;
-            TITULOS[TOTAL_TARJETAS[0]] = null;
-            CONTENIDOS[TOTAL_TARJETAS[0]] = null;
+            // ELIMINAR TARJETA (compactar arreglos)
+            for (int i = indice; i < TOTAL_TARJETAS - 1; i++) {
+                TITULOS_TARJETAS[i] = TITULOS_TARJETAS[i + 1];
+                CONTENIDOS_TARJETAS[i] = CONTENIDOS_TARJETAS[i + 1];
+            }
+
+            // LIMPIAR ÚLTIMA POSICIÓN
+            TITULOS_TARJETAS[TOTAL_TARJETAS - 1] = null;
+            CONTENIDOS_TARJETAS[TOTAL_TARJETAS - 1] = null;
+
+            TOTAL_TARJETAS--;
 
             System.out.println("\n=======================================");
             System.out.println("|   Tarjeta eliminada correctamente   |");
@@ -12941,111 +12953,112 @@ public class SERQ {
         }
     }
 
+    public static void editarTarjeta() {
 
-    public static void editarTarjetaPorNumero(String[] TITULOS, String[] CONTENIDOS, int[] TOTAL_TARJETAS) {
+        if (TOTAL_TARJETAS == 0) {
+            limpiarPantalla();
+            System.out.println("=================================================");
+            System.out.println("|        No hay tarjetas para editar.           |");
+            System.out.println("=================================================");
+            esperarEnter();
+            return;
+        }
 
         while (true) {
             limpiarPantalla();
 
-            if (TOTAL_TARJETAS[0] == 0) {
-                System.out.println("=================================================");
-                System.out.println("|        No hay tarjetas para editar.           |");
-                System.out.println("=================================================");
-                esperarEnter();
-                return;
-            }
-
             System.out.println("=================================================");
             System.out.println("|                EDITAR TARJETA                 |");
             System.out.println("=================================================");
-            System.out.printf("  Total de tarjetas: %d%n", TOTAL_TARJETAS[0]);
+            System.out.println("  Total de tarjetas: " + TOTAL_TARJETAS);
             System.out.println("-------------------------------------------------");
-            System.out.println(" Escribe 0 para regresar al menú anterior.");
-            System.out.println("-------------------------------------------------\n");
+            System.out.println("  Escribe 0 para regresar.");
+            System.out.println("-------------------------------------------------");
 
-            System.out.print("  Ingrese el número de la tarjeta a editar: ");
+            // Mostrar tarjetas
+            for (int i = 0; i < TOTAL_TARJETAS; i++) {
+                System.out.println("  " + (i + 1) + ". " + TITULOS_TARJETAS[i]);
+            }
 
-            // Validación de número
+            System.out.println("-------------------------------------------------");
+            System.out.print("  Número de tarjeta a editar: ");
+
+            // Validar número
             if (!scanner.hasNextInt()) {
                 scanner.nextLine();
                 System.out.println("\n===============================================");
-                System.out.println("| Entrada inválida. Debes ingresar un número. |");
+                System.out.println("| Entrada inválida. Ingresa un número.        |");
                 System.out.println("===============================================");
                 esperarEnter();
-                continue; // repetir bloque
+                continue;
             }
 
             int numero = scanner.nextInt();
-            scanner.nextLine(); // limpiar buffer
+            scanner.nextLine();
 
-            // Opción regresar
-            if (numero == 0) {
-                esperarEnter();
-                return;
-            }
+            if (numero == 0) return;
 
             int indice = numero - 1;
 
-            if (indice < 0 || indice >= TOTAL_TARJETAS[0]) {
+            if (indice < 0 || indice >= TOTAL_TARJETAS) {
                 System.out.println("\n===============================================");
-                System.out.println("| El número no corresponde a ninguna tarjeta. |");
+                System.out.println("| Número fuera de rango.                      |");
                 System.out.println("===============================================");
                 esperarEnter();
-                continue; // repetir
+                continue;
             }
 
-            // Mostrar datos actuales
+            // Mostrar tarjeta actual
             limpiarPantalla();
             System.out.println("=================================================");
-            System.out.printf("     EDITANDO TARJETA #%d%n", numero);
+            System.out.println("|          TARJETA SELECCIONADA                |");
             System.out.println("=================================================");
-            System.out.printf("  Título actual: %s%n", TITULOS[indice]);
-            System.out.printf("  Contenido actual: %s%n", CONTENIDOS[indice]);
+            System.out.println("Título actual:");
+            System.out.println(TITULOS_TARJETAS[indice]);
+            System.out.println("\nContenido actual:");
+            System.out.println(CONTENIDOS_TARJETAS[indice]);
             System.out.println("-------------------------------------------------");
-            System.out.println(" (Escribe 0 en cualquier campo para cancelar)");
-            System.out.println("-------------------------------------------------\n");
+            System.out.println("Deja el campo vacío para NO cambiarlo.");
+            System.out.println("Escribe 0 para cancelar.");
+            System.out.println("-------------------------------------------------");
 
             // Nuevo título
-            System.out.print("Ingrese el NUEVO título:\n> ");
-            String nuevoTitulo = scanner.nextLine().trim();
+            System.out.print("Nuevo título:\n> ");
+            String nuevoTitulo = scanner.nextLine();
 
-            if (nuevoTitulo.equals("0")) {
-                return;
-            }
-
-            if (nuevoTitulo.isEmpty()) {
-                System.out.println("\n=================================================");
-                System.out.println("| El título no puede estar vacío. Intenta otra vez. |");
-                System.out.println("=================================================");
-                esperarEnter();
-                continue;
-            }
+            if (nuevoTitulo.equals("0")) return;
 
             // Nuevo contenido
-            System.out.print("\nIngrese el NUEVO contenido:\n> ");
-            String nuevoContenido = scanner.nextLine().trim();
+            System.out.print("\nNuevo contenido:\n> ");
+            String nuevoContenido = scanner.nextLine();
 
-            if (nuevoContenido.equals("0")) {
+            if (nuevoContenido.equals("0")) return;
+
+            // Confirmación
+            System.out.println("\n-----------------------------------------------");
+            System.out.print("¿Guardar cambios? (S/N): ");
+            String confirmacion = scanner.nextLine();
+
+            if (!confirmacion.equalsIgnoreCase("S")) {
+                System.out.println("\nEdición cancelada.");
+                esperarEnter();
                 return;
             }
 
-            if (nuevoContenido.isEmpty()) {
-                System.out.println("\n=================================================");
-                System.out.println("| El contenido no puede estar vacío. Intenta.   |");
-                System.out.println("=================================================");
-                esperarEnter();
-                continue;
+            // Aplicar cambios solo si hay texto
+            if (!nuevoTitulo.trim().isEmpty()) {
+                TITULOS_TARJETAS[indice] = nuevoTitulo.trim();
             }
 
-            // Guardar cambios
-            TITULOS[indice] = nuevoTitulo;
-            CONTENIDOS[indice] = nuevoContenido;
+            if (!nuevoContenido.trim().isEmpty()) {
+                CONTENIDOS_TARJETAS[indice] = nuevoContenido.trim();
+            }
 
             System.out.println("\n=================================================");
-            System.out.println("|     Tarjeta editada correctamente ✔️          |");
+            System.out.println("|   Tarjeta editada correctamente ✔            |");
             System.out.println("=================================================");
             esperarEnter();
-            return; // edición completa
+            return;
         }
     }
 
