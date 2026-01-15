@@ -1,4 +1,3 @@
-
 import java.util.Scanner;
 import java.util.HashMap;
 import java.time.LocalDate;
@@ -6601,11 +6600,11 @@ public class SERQ {
             // OPCIONES VÁLIDAS
             switch (opcion_menu) {
                 case 1:
-                    tecnicasMnemotecnicas(); // << TU FUNCIÓN AQUÍ
+                    tecnicasMnemotecnicas(); // << 
                     break;
 
                 case 2:
-                    ejemplosPracticos(); // << TU FUNCIÓN AQUÍ
+                    ejemplosPracticos(); // << 
                     break;
 
                 case 0:
@@ -6836,7 +6835,7 @@ public class SERQ {
         System.out.println("| - Los físicos NO alteran la composición, los químicos SÍ |");
         System.out.println("|   generan sustancias nuevas.                             |");
         System.out.println("------------------------------------------------------------");
-        System.out.println("|  Ejemplo en ASCII:                                       |");
+        System.out.println("|  Ejemplo:                                                |");
         System.out.println("|        FÍSICO:   [ PAPEL ] → [ PAPEL ✂ ]                |");
         System.out.println("|        QUÍMICO:  [ PAPEL ] → [ 🔥 CENIZA + HUMO ]        |");
         System.out.println("============================================================");
@@ -6856,7 +6855,7 @@ public class SERQ {
         System.out.println("|   * Compuesto: unión química fija entre dos o más elementos.                                          |");
         System.out.println("|   * Mezcla: combinación física; sus componentes pueden separarse.                                     |");
         System.out.println("---------------------------------------------------------------------------------------------------------");
-        System.out.println("|   Representación rápida:                                                                              |");
+        System.out.println("|   Representación:                                                                              |");
         System.out.println("|       [O][O]        → Elemento                                                                        |");
         System.out.println("|       [H]-[O]-[H]   → Compuesto                                                                       |");
         System.out.println("|   [N] [O2] [CO2]    → Mezcla (aire)                                                                   |");
@@ -9787,7 +9786,7 @@ public class SERQ {
                 int mes2 = Integer.parseInt(p2[1]);
                 int anio2 = Integer.parseInt(p2[2]);
 
-                // Comparaci�n correcta: primero a�o, luego mes, luego d�a
+                // Comparacion correcta: primero año, luego mes, luego dia
                 boolean debeIntercambiar = false;
 
                 if (anio1 > anio2) debeIntercambiar = true;
